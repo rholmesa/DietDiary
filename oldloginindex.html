@@ -1,0 +1,110 @@
+<!doctype html>
+
+<head>
+	<meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
+	<title>Nutrition Log</title>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" />
+	<link rel="stylesheet" href="../_css/site.css" />
+
+	<script type="text/javascript" src="sha512.js"></script>
+	<script type="text/javascript" src="forms.js"></script>
+	<script type="text/javascript" src="dietdiaryfunctions.js"></script>
+	
+	<style type="text/css">
+	
+	h1 {
+		margin-left:20px;
+		}	
+    .welcomeframe {
+			width: 600px;
+			clear: both;
+			display: inline-block;
+			vertical-align: baseline;
+			margin-top: 10px;
+			margin-left: 20px;
+			border: 2px solid;
+			border-color: DARKGREEN;
+			padding: 20px;			
+    }
+    .welcomeframe input{
+			width: 75%;
+			clear: both;
+    }
+		.welcomeframe label{
+			width: 50%;
+			clear: both;
+		}
+		.loginform {
+			clear: left;
+		}
+		.grey {
+			color: DARKGREY;
+		}
+		#leftcolumn, #rightcolumn {
+			border: 2px solid;
+			border-color: DARKGREEN;
+			padding: 20px;
+			float: left;
+			height: 230px;
+		}
+		#leftcolumn {
+			width: 250px;
+		}
+		#rightcolumn {
+			width: 250px;
+		}
+		.welcomeframe label {
+			width: 200px;
+		}
+		#rememberme {
+			clear:left;
+		}
+		.bt_login {
+			font-size: 100%;
+			color: GREY;
+		}
+	</style>
+</head>
+<body onload="checkLogin();">
+    <div class="header">
+        <p class="logo"> Nutrition Log <i class="mm"><em class="mm">The<br />Real<br />Meal</em></i> </p>
+    </div>
+    <h1>Welcome!</h1>
+    <div class="welcomeframe" id="welcomeframe">
+        <div class="loggedout">
+            <div id="leftcolumn">
+                <h2>Member Login</h2>
+                <form method="post" action="process_login.php" class="loginform" id="loginform">
+                    <label for="username" class="grey">Username: <input type="text" size="20" value="" id="username" name="username" class="field" /></label>				
+                    <br>
+                    <label for="password" class="grey">Password: <input type="password" size="20" id="password" name="password" class="field" /></label>									
+                    <br><br>
+                    <label for="rememberMe" class="grey" id="rememberme">Remember me:<input type="checkbox" value="1" checked="checked" id="rememberme" name="rememberMe"/>					
+                    </label> 
+                    <br>
+                    <input type="submit" class="bt_login" value="Login" name="login" onclick="formhash(this.form, this.form.password);"/>
+                </form>
+            </div>
+            <div id="rightcolumn">
+                <h2>Register here</h2>
+                <form method="post" action="process_register.php" class="loginform" id="loginform">
+                    <label for="username" class="grey">Username: <input type="text" size="20" value="" id="username" name="username" class="field" /></label>
+                    <br>				
+                    <label for="email" class="grey">Email:&nbsp;&nbsp;&nbsp;&nbsp; <input type="text" size="20" value="" id="email" name="email" class="field" /></label>								
+                    <br>				
+                    <label for="password" class="grey">Password: <input type="password" size="20" id="password" name="password" class="field" /></label> 				
+                    <br><br>
+                    <label for="submit"><input type="submit" class="bt_login" value="Submit" name="submit" onclick="formhash(this.form, this.form.password);"/>				
+                    </label>
+                </form>
+            </div>
+        </div>
+        <div class="loggedin" id="loggedin"><br />
+            <p>You are logged on!</p>
+            <a href="./ronsindex.html">Continue.....</a>
+            <p>- or -</p>
+            <a href="logout.php">Log off</a>
+        </div>
+    </div>
+<body>

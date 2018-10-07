@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="SHORTCUT ICON" href="http://icons.iconarchive.com/icons/kidaubis-design/cool-heroes/128/Ironman-icon.png"/>
+    <title>Nutrition Log</title>
+    <link rel="stylesheet" href="../_css/site.css" />
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>	
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    <!--Load the AJAX API-->
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>	
+    <!-- now some local functions -->		
+    <script src="dietdiaryfunctions.js" type="text/javascript"></script>
+    <script type="text/javascript" src="sha512.js"></script>
+    <script type="text/javascript" src="forms.js"></script>
+    <script type="text/javascript" src="../DietDiary/_js/jquery.ui.autocomplete.html.js"></script>
+<!--    <script type="text/javascript" src="../_js/jquery.autocomplete.min.js"></script> -->
+    <script type="text/javascript" src="../DietDiary/_js/jquery.jeditable.mini.js"></script>
+
+    <script type="text/javascript">
+    // Load the Visualization API and the gauge package.
+    google.load('visualization', '1.0', {'packages':['gauge','corechart']});
+    //<!-- continue with the rest of the code -->
+    var currentDate = new Date();  //defaults to todays date
+    var currentColumn = "Energy_kcal_kcal";  // defaults to calories display
+
+    $(document).ready(function() {		//when the document is ready i.e. all html loaded
+        //hide some of the stuff
+        $('.tabbedPanels').hide();
+        $('.panelContainer').hide();
+        // lets start by setting the date
+        currentDate = new Date();
+        currentColumn = "Energy_kcal_kcal";
+        // and set up the datepicker for the header
+        $('#datepicker').val(dateFormat(currentDate, 'nutritionDate'));
+        //and get the calories total for this date
+        getSpecificValues(currentDate, currentColumn);
+        // and the recipes for today
+        getDaysRecipes(currentDate);
+        /*
+        // and now the function attached to #datepicker id - initialises the other panels
+        */
+        var MYDATEFORMAT = "DD, d M yy";
+        $('#datepicker').datepicker({
+            maxDate: '+0d',
+            dateFormat: MYDATEFORMAT,
+            onSelect: function(dateText, inst) {
+                    currentDate = $.datepicker.parseDate(inst.settings.dateFormat || $.datepicker._defaults.dateFormat, dateText, inst.settings);
+                    getSpecificValues(currentDate, currentColumn);
+                    getDaysRecipes(currentDate);
+            }
+        });//end datepicker function
+        $('.loggedin').hide();
+
+        // handle the initial display - depends whether user is logged in!
+        $('#loginform').show();
+        $('#loginform').submit(function() {
+            var formData = $(this).serialize();	//collate all the user input
+            $.post('process_login.php', 
+                formData, 
+                function(data) {			// the callback function for above
+                    if (data === "pass") {
+                        $('#loginform').hide();
+                        $('.loggedin').show();
+                    } else {
+                        $('#loginpanel').prepend("Incorrect login information. Please try again");
+                    }
+                }
+            ); // end processData
+            }
+        ); // end login submit function
+
+        /*
+        // now handle the tabs
+        // this next bit of code controls the display of the selector tabs
+        */
+        $('.tabs a').click (function() {    //when a selector tab is clicked
+            var $this = $(this);            // efficient for multiple accesses
+            $('.panel').hide();             // hide panels
+            //remove the fuzzy lines around 'selected' item
+            $('.tabs a.active').removeClass('active');  // remove it
+            $this.addClass('active').blur();            // and add this is the effect
+            // now make the panel appear
+            var panel = $this.attr('href'); // get the reference attribute (the id of the required panel
+            $(panel).fadeIn('slow');        // and fade it in
+            $(panel + " :input:visible:first").focus(); // set the cursor to the first input on the panel
+            return false;                   // this stops the browser following the tab as a 'proper' link
+            }
+        ); //end tabs click
+ 
+ 	// set up the selection list in the chart display panel
+        showColumnSelections();
+        /***********************************************
+	// this next section sets up the 'Meals +' tab	
+        // this is where new recipes can be entered, but also
+        // where existing recipes can be displayed
+        */
+        $('#resetbutton').hide();               // there is nothing to reset yet
+        //set up the autocomplete for selecting recipes
+
+        $("#recipeName").autocomplete({         // attached to the recipename input field
+            source: "./getlist.php",            // get the list of all recipes
+            minLength: 2,
+            html : true,
+            autoFocus: true,
+            selectFirst : true,
+            select: function(event, ui) {
+                displayRecipeIngredients(ui.item.id);   //display the selected one
+                }
+            }
+        );
+        // and the keypress
+        $('#recipeName').keypress(function(e) {         // if they press return from the recipe field
+            if(e.which === 13 || e.which === 9) {       
+                $('#recfoodselection a').click();       // pretend they have clicked the 'add' button
+            }
+        });
+        $('#portionName').keypress(function(e) {
+            if(e.which === 13) {
+                $('#recipeid').click();
+            }
+        });
+        $('#numPortions').keypress(function(e) {
+            if(e.which === 13) {
+                $('#portionName').focus();
+            }
+        });
+        /******************************************************
+        // now set up the new ingredients panel
+        // this is where the user can add new ingredients into the database
+        */
+        $('#newamountcell').keypress(function(e) {
+            if(e.which === 13) {
+                $('#currentingredientrow td:eq(3)').click();
+            }
+        });
+        // now the autocomplete bit
+        $('#food_name').autocomplete({
+            source: "getIngredientList.php",  // gets the ingredient list for dropdown
+            minLength: 3,
+            html : true,
+            autoFocus: true,
+            selectFirst : true,                       // minimum of 3 characters required
+            select: function(event, ui) {
+                $('#ingredientButton').attr('value',"Update Ingredient");   // change the button to update since this INGREDIENT exists
+                $('#ingredientButton').attr('onclick','updateIngredient()');// and the associated function
+                $('#ingredientid').val(ui.item.id);                         // and save the value of the ingredientid for later
+                $.post('getIngredient.php',                     // now get the ingredient selected
+                    { ingredientfoodcode : ui.item.id },
+                    function (data){
+                        $('#energy').val(data[0]['energy']);        // and fill in all the valuesd
+                        $('#protein').val(data[0]['protein']);
+                        $('#carbs').val(data[0]['carbs']);
+                        $('#sugars').val(data[0]['sugars']);
+                        $('#fat').val(data[0]['fat']);
+                        $('#satfats').val(data[0]['satfats']);
+                        $('#fibre').val(data[0]['fibre']);
+                        $('#sodium').val(data[0]['sodium'] / 400);
+                        $('#Cholesterol').val(data[0]['Cholesterol']);
+                        $('#alcohol').val(data[0]['alcohol']);                    
+                    },
+                    'json'
+                );
+                }
+            }
+        );       
+    }); // end ready	
+</script>
+  </head> 
+  <body onload='checkLogin();'>
+    <div class="tabbedPanels" visibility="hidden">
+        <div class="header">
+          <p class="logo">Nutrition Log <i class="mm"><em class="mm">The<br />
+                Real<br />
+                Meal</em></i> </p>
+        </div>
+        <div class="dateheader">
+            <div id="prevbuttdiv"><input type="button" onclick="decrementDate();" id="prevbutt" value="&lt;&lt;" name="previous" /></div>
+            <div id="nextbuttdiv"><input type="button" onclick="incrementDate();" id="nextbutt" value="&gt;&gt;" name="next" /></div>			
+            <div id="datepickerdiv"><input type="text" align="middle" id="datepicker" name="date" /></div>
+        </div>
+      <ul class="tabs">
+                  
+        <li class="loggedin"><a href="#dailies">Days Nutrients</a></li>
+        <li class="loggedin"><a href="#period">Food Log</a></li>
+        <li class="loggedin"><a href="#newentries">New Meals</a></li>
+        <li class="loggedin"><a href="#newingredients">New Foods</a></li>
+        <li class="loggedin"><a href="#loginpanel">Logout</a></li> 
+
+      </ul>
+      <div class="panelContainer">
+        <div class="panel" id="loginpanel">
+            <div class="loggedout">
+                <div id="leftcolumn">
+                    <h2>Member Login</h2>
+                    <form method="post" action="process_login.php" class="loginform" id="loginform">
+                        <label for="username" class="grey">Username: <input type="text" size="20" value="" id="username" name="username" class="field" /></label>				
+                        <br>
+                        <label for="password" class="grey">Password: <input type="password" size="20" id="password" name="password" class="field" /></label>									
+                        <br><br>
+                        <label for="rememberMe" class="grey" id="rememberme">Remember me:<input type="checkbox" value="1" checked="checked" id="rememberme" name="rememberMe"/>					
+                        </label> 
+                        <br>
+                        <input type="submit" class="bt_login" value="Login" name="login" onclick="formhash(this.form, this.form.password);"/>
+                    </form>
+                </div>
+                <div id="rightcolumn">
+                    <h2>Register here</h2>
+                    <form method="post" action="process_register.php" class="loginform" id="loginform">
+                        <label for="username" class="grey">Username: <input type="text" size="20" value="" id="username" name="username" class="field" /></label>
+                        <br>				
+                        <label for="email" class="grey">Email:<br /><input type="text" size="20" value="" id="email" name="email" class="field" /></label>								
+                        <br>				
+                        <label for="password" class="grey">Password: <input type="password" size="20" id="password" name="password" class="field" /></label> 				
+                        <br><br>
+                        <label for="register"><input type="submit" class="bt_login" value="Register" name="register" onclick="formhash(this.form, this.form.password);"/>				
+                        </label>
+                    </form>
+                </div>
+            </div>
+            <div class="loggedin" id="loggedin"><br />
+                <p>You are logged on!</p>
+                <a href="./index.html" style="margin-left: 100px">Continue.....</a>
+                <p>- or -</p>
+                <a href="logout.php" style="margin-left: 100px">Log off</a>
+            </div>
+        </div>         
+        <div id="dailies" class="panel">
+            <!--<h2>This is the Nutrition Panel!</h2>  -->
+            <div id='displaygraph'>
+                <fieldset>
+                    <legend>Nutritional Information</legend>
+                    <table>
+                    <tr>
+                        <td><div class="graphtable" id="box1">Box 1</div></td>
+                        <td><div class="graphtable" id="box2">Box 2</div></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><div class="graphtable2col" id="box3">Box 3</div></td>
+                    </tr>
+                    </table>
+                    <div id="columnselections"></div>
+                </fieldset>
+            </div>
+        </div>
+        <!-- end panel Nutrition -->
+        <div id="period" class="panel">
+          <form id="display" name="display" method="post" action="">
+            <fieldset>
+                <legend>This Days Food &amp; Drink</legend>
+                <div class="innerbox">
+                    <div id="diarybox">diary table replaces this</div>					
+                    <div id="mealentry" style="display:none">
+                        <label id="foodnamelabel">Food Name</label>								
+                    </div>
+                </div>
+            </fieldset>
+          </form>
+        </div>
+        <!-- end panel period -->
+        <div id="newentries" class="panel">
+        <fieldset>
+            <legend>Convenient Combinations</legend>
+            <div class="innerbox">					
+                <form action="" id="food">
+                    <div id="recfoodselection">
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td style="width:25%; font-weight:bold; font-size: 110%">Recipe:</td>
+                                    <td><input type="text" name="recipeName" id="recipeName" maxlength="50" size="255" /></td>
+                                    <td style="width:10%"><a id="recipeid" onclick="addRecipe()" class="plussign" title="Add ..." ></a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <table>
+                            <tbody>
+                                <tr id="divNumPortions">
+                                    <td style="width:25%">Servings:</td>
+                                    <td style="width:25%"><input type="text" id="numPortions" maxlength="4" size="4" /></td>
+                                    <td style="width:25%">Serving Name:</td>
+                                    <td style="width:25%"><input type="text" id="portionName" maxlength="15" size="32" /></td>
+                                </tr>
+                            </tbody>
+                        </table>				
+                        <div id="recdetail"></div><!-- these blank divs will hold content DO NOT DELETE! -->
+                        <div id="recipeid2"></div><!-- these blank divs will hold content DO NOT DELETE! -->
+                        <div id="recipebox"></div><!-- these blank divs will hold content DO NOT DELETE! -->
+                        <div id="resetbutton" align ="center"><input type="button" value="Reset" onClick="removeRecipeDetails()" /></div>			
+                        <div id="matches"></div>
+                    </div>
+                </form>
+                <div id="recipeentry" style="display:none">
+                    <label id="recipenameLabel">Food Name</label>								
+                </div>	
+                <div id="recpopup_box"></div>
+            </div>
+             <!-- end popup -->
+        </fieldset>					
+        </div> <!-- end of new entries -->			
+        <div id="newingredients" class="panel">
+        <!--<h2><br>This is the New Ingredients Panel!</h2><br>  -->
+            <fieldset>
+                <legend>New Ingredients</legend>
+                <div id="ingredientform" class="innerbox">
+                    <form>
+                        <table id="ingredienttable" style="width:100%">
+                            <tbody>
+                            <tr>
+                                <td style="width:35%; font-weight:bold; font-size: 110%">Ingredient Name: </td>
+                                <td ><input type="text" id="food_name" size="45" maxlength="255"/></td>
+                            </tr>
+                            <tr>
+                                <td style="width:35%; font-size: 110%">Barcode: </td>
+                                <td ><input type="text" id="barcode" size="45" maxlength="255"/></td>
+                            </tr>
+                            <tr><td>Per 100g values:</td><td>(from the panel on the pack)</td></tr>
+                            <tr><td>Energy in kcal: </td><td><input type="text" id="energy"/></td></tr>
+                            <tr><td>Fat: </td><td><input type="text" id="fat"/></td></tr>
+                            <tr><td>of which sats: </td><td><input type="text" id="satfats"/></td></tr>
+                            <tr><td>Carbohydrates: </td><td><input type="text" id="carbs"/></td></tr>
+                            <tr><td>of which sugars: </td><td><input type="text" id="sugars"/></td></tr>
+                            <tr><td>Fibre: </td><td><input type="text" id="fibre"/></td></tr>
+                            <tr><td>Protein: </td><td><input type="text" id="protein"/></td></tr>
+                            <tr><td>Salt: </td><td><input type="text" id="sodium" onblur="showSalt()" /><div id="salt" style="float:right"> (Sodium: )&nbsp;&nbsp;</div></td></tr>
+                            <tr><td>Cholesterol (mg): </td><td><input type="text" id="Cholesterol"/></td></tr>
+                            <tr><td>Alcohol ml: </td><td><input type="text" id="alcohol" onblur="showAUnits()"/><div id="aunits" style="float:right"> (Units)&nbsp;&nbsp;</div></td></tr>
+                            <tr><td>Portion Values:</td><td>(please put portion values below)</td></tr>
+                            <tr><td>Portion Size(g): </td><td><input type="text" id="newportionsize"/></td></tr>
+                            <tr><td>Portion Name: </td><td><input type="text" id="newportionname"/></td></tr>
+                            <tr>
+                                <td align="center" id="ingredientid"><input type="button" onclick="addNewIngredient()" name="ingredientButton" id="ingredientButton" value="Add Ingredient" /></td>
+                                <td align="center"><input type="button" onclick="removeIngredientDetails()" name="resetIngredientButton" id="resetIngredientButton" value="Clear Entry" /></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </form>
+                </div>
+            </fieldset>
+        </div>
+      </div>
+    <div class="footer">
+      <p>Nutrition Log: The Real Meal, by <a href="http://rwgholmes.com/">Ron
+          Holmes</a>.</p>
+    </div>        
+    </div>
+  </body>
+</html>

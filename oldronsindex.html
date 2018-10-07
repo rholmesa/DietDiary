@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<title>Nutrition Log</title>
+	
+	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="C://Users/Ron/SkyDrive/Software/DietDiary/DietDiary/_css/site.css" />
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>	
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>		
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" />
+	
+	<!--Load the AJAX API-->
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+	<!-- now some local functions -->		
+	<script src="dietdiaryfunctions.js"></script>
+	<script src="sha512.js"></script>
+	<script src="forms.js"></script>
+
+	<script>
+		// Load the Visualization API and the gauge package.
+		google.charts.load('current', {'packages':['gauge']});
+	//<!-- continue with the rest of the code -->
+	var currentDate = new Date();  //defaults to todays date
+	var currentColumn = "Energy_kcal_kcal";  // defaults to calories display
+	
+	$(document).ready(function() {		//when the document is ready i.e. all html loaded
+		// Set a callback to run when the Google Visualization API is loaded.
+		google.setOnLoadCallback(drawChart());
+		// lets start by setting the date
+		currentDate = new Date();
+                currentColumn = "Energy_kcal_kcal";
+		$('#datepicker').val(dateFormat(currentDate, 'nutritionDate'));
+		//and get the calories total for this date
+		getSpecificValues(currentDate, currentColumn);
+		// and the recipes for today
+		getDaysRecipes(currentDate);
+		// and now the function attached to #datepicker id	
+		var MYDATEFORMAT = "DD, d M yy";
+		$('#datepicker').datepicker({
+			maxDate: '+0d',
+			dateFormat: MYDATEFORMAT,
+			onSelect: function(dateText, inst) {
+				currentDate = $.datepicker.parseDate(inst.settings.dateFormat || $.datepicker._defaults.dateFormat, dateText, inst.settings);
+				getSpecificValues(currentDate, currentColumn);
+				getDaysRecipes(currentDate);
+			}
+		});//end datepicker function
+		// now the hidden popups for selections
+//		$('#popup_box').hide();
+		$('#divPortionName').hide();
+		$('#divNumPortions').hide();
+
+		//on click show the hider div and the message
+		$('#showpopup').click( function() {
+                    showPopup();
+		});
+		//on click hide the message and the
+		$('#buttonClose').click( function() {
+                    hidePopup();
+		});	
+		// now handle the sliding tabs
+		$('.tabs a').click (function() {
+				var $this = $(this);     // efficient for multiple accesses
+				$('.panel').hide();		 // hide panels
+				//remove the fuzzy lines around 'selected' item
+				$('.tabs a.active').removeClass('active'); // remove it
+				$this.addClass('active').blur();		// and add this is the effect
+				// now make the panel appear
+				var panel = $this.attr('href');
+				$(panel).fadeIn('slow');
+				return false; // this stops the browser following the tab as a 'proper' link
+		}); //end tabs click
+		// now fire the click for first entry
+		$('.tabs li:first a').click();	
+		// now check for login - this is not yet done so assume NOT logged in
+		$('#loginform').show();
+		$('#loggedin').hide();
+		$('#loginform').submit(function() {
+			var formData = $(this).serialize();	//collate all the user input
+			$.post('process_login.php', 
+				formData, 
+				function(data) {			// the callback function for above
+					if (data === "pass") {
+									$('#loginform').hide();
+									$('#loggedin').show();
+//					$('#content').html("You have successfully logged on!");
+					} else {
+									$('#welcomeframe').prepend("Incorrect login information. Please try again");
+					}
+			}); // end processData
+		}); // end login submit function
+
+		//set up the autocomplete for selecting recipes		
+		$("#recipeName").autocomplete({
+			source: "./getlist.php",
+			minLength: 2,
+			select: function(event, ui) {
+					//getRecipeDetails(ui.item.id);
+					displayRecipeIngredients(ui.item.id);
+			}
+		});
+	}); // end ready
+	
+	</script>
+  </head>
+  <body>
+  <!--<body onload='checkLogin();'>-->
+    <div class="tabbedPanels">
+        <div class="header">
+          <p class="logo">Nutrition Log <i class="mm"><em class="mm">The<br />
+                Real<br />
+                Meal</em></i> </p>
+        </div>
+        <div class="dateheader">
+            <div id="prevbuttdiv"><input type="button" onclick="decrementDate();" id="prevbutt" value="&lt;&lt;" name="previous" /></div>
+            <div id="nextbuttdiv"><input type="button" onclick="incrementDate();" id="nextbutt" value="&gt;&gt;" name="next" /></div>			
+            <div id="datepickerdiv"><input type="text" align="middle" id="datepicker" name="date" /></div>
+        </div>
+      <ul class="tabs">
+        <li><a href="#dailies"> Days Nutrients</a></li>
+        <li><a href="#period">Food Log</a></li>
+        <li><a href="#newentries">New Foods</a></li>
+        <li><a href="#newingredients">New Ingredients</a></li>
+      </ul>
+      <div class="panelContainer">
+        <div id="dailies" class="panel">
+            <!--<h2>This is the Nutrition Panel!</h2>  -->
+            <div id='displaygraph'>
+                <fieldset onClick="showColumnSelections()">
+                    <legend>Nutritional Information</legend>
+                    <div id="displayframe">Daily replace this</div>
+                    <div id="columnselections"></div>
+                </fieldset>
+            </div>
+        </div>
+        <!-- end panel Nutrition -->
+        <div id="period" class="panel">
+            <fieldset>
+                <legend>This Days Food &amp; Drink</legend>
+                <div class="innerbox">
+                    <form id="display" name="display" method="post" action="">
+                        <div id="diarybox">Days Meals Table Replaces This</div>
+<!--                        <div id="popup_box"></div>  -->
+                    </form>
+                    <div id="mealentry" style="display:none">
+                        <label id="foodnamelabel">Food Name</label>
+                        <label id="amountlabel" for="mealamount"><br>New Amount:&nbsp;</label>					
+                        <input type="text" name="mealamount" id="mealamount"/>								
+                    </div>
+                </div>
+                <!-- end popup -->
+            </fieldset>
+        </div>
+        <!-- end panel period -->
+        <div id="newentries" class="panel">
+        <fieldset>
+            <legend>Convenient Combinations</legend>
+            <div class="innerbox">					
+                <form action="" id="food">
+                    <div id="recfoodselection">
+                        Name <input type="text" name="recipeName" id="recipeName" maxlength="32" size="255" />
+                        <div id="divNumPortions">Servings:<input type="text" id="numPortions" maxlength="4" size="4" /></div>
+                        <div id="divPortionName">&nbsp;&nbsp;&nbsp;Units:<input type="text" id="portionName" maxlength="15" size="10" /></div>
+                        <a onclick="addRecipe()" class="plussign"></a>					
+                        <div id="recdetail"></div>
+                        <div id="recipeid"></div>
+                        <div id="recipebox"></div>
+                        <div id="resetbutton" align ="center"><input type="button" value="Start Again" onClick="removeRecipeDetails()" /></div>			
+                        <div id="matches"></div>
+                    </div>
+                </form>
+                <div id="recipeentry" style="visibility:hidden">
+                    <label id="recipenameLabel">Food Name</label>
+                    <label id="amountlabel2" for="recipeamount"><br>New Amount:&nbsp;</label>					
+                    <input type="text" name="recipeamount" id="recipeamount"/>								
+                </div>	
+                <div id="recpopup_box"></div>
+            </div>
+             <!-- end popup -->
+        </fieldset>					
+        </div> <!-- end of new entries -->			
+        <div id="newingredients" class="panel">
+        <!--<h2><br>This is the New Ingredients Panel!</h2><br>  -->
+            <fieldset>
+                <legend>New Ingredients</legend>
+                <div id="ingredientform">
+                    <form>
+                        <table style="width:400px">
+                            <tr><td width="10%">Ingredient Name: </td><td width="50%"><input type="text" id="food_name" /></td></tr>
+                            <tr><td>Per 100g values:</td><td>&nbsp;</td></tr>
+                            <tr><td>Energy in kcal: </td><td><input type="text" id="energy"/></td></tr>
+                            <tr><td>Fat: </td><td><input type="text" id="fat"/></td></tr>
+                            <tr><td>of which sat'es: </td><td><input type="text" id="satfats"/></td></tr>
+                            <tr><td>Carbohydrates: </td><td><input type="text" id="carbs"/></td></tr>
+                            <tr><td>of which sugars: </td><td><input type="text" id="sugars"/></td></tr>
+                            <tr><td>Fibre: </td><td><input type="text" id="fibre" value="0.0"/></td></tr>
+                            <tr><td>Protein: </td><td><input type="text" id="protein" value="0.0"/></td></tr>
+                            <tr><td>Sodium (mg): </td><td><input type="text" id="sodium" value="0.0"/></td></tr>
+                            <tr><td>Cholesterol (mg): </td><td><input type="text" id="Cholesterol" value="0.0"/></td></tr>
+                            <tr><td>Alcohol: </td><td><input type="text" id="alcohol" value="0.0"/></td></tr>
+                            <tr><td>Portion Values:</td><td>&nbsp;</td></tr>
+                            <tr><td>Portion Size(g): </td><td><input type="text" id="newportionsize"/></td></tr>
+                            <tr><td>Portion Name: </td><td><input type="text" id="newportionname"/></td></tr>
+                        </table>
+                        <input type="button" onclick='addNewIngredient()' id="ingredientButton" value="Submit" />
+                    </form>
+                </div>
+            </fieldset>
+        </div>
+        <div class="footer">
+          <p> Nutrition Log: The Real Meal, by  <a href="http://rwgholmes.com/">Ron
+              Holmes</a>.</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

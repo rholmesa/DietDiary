@@ -1,0 +1,187 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+	<meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
+	<title>Recipe Div Tests</title>
+	<link href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" />
+	<link rel="stylesheet" href="../_css/site.css" />
+	<style type="text/css">
+	/* highlight results */
+.ui-autocomplete span.hl_results {
+    background-color: #ffff66;
+}
+ 
+/* loading - the AJAX indicator */
+.ui-autocomplete-loading {
+    background: white url('../img/ui-anim_basic_16x16.gif') right center no-repeat;
+}
+ 
+/* scroll results */
+.ui-autocomplete {
+    max-height: 250px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+    /* add padding for vertical scrollbar */
+    padding-right: 5px;
+}
+ 
+.ui-autocomplete li {
+    font-size: 16px;
+}
+ 
+/* IE 6 doesn't support max-height
+* we use height instead, but this forces the menu to always be this tall
+*/
+* html .ui-autocomplete {
+    height: 250px;
+}
+</style>
+	
+	
+	<!-- <link rel="stylesheet" href="../_css/modalpopup.css" /> -->
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>	
+	<script type="text/javascript" src="../_js/jquery.autocomplete.min.js"></script>
+	<script type="text/javascript" src="../_js/jquery.ui.autocomplete.html.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js" type="text/javascript"></script>
+	
+<!--Load the AJAX API-->
+	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+	
+	<script src="dietdiaryfunctions.js" type="text/javascript"></script>
+	<script type="text/javascript" src="sha512.js"></script>
+	<script type="text/javascript" src="forms.js"></script>
+	<script type="text/javascript">
+	// Load the Visualization API and the gauge package.
+	//google.load('visualization', '1.0', {'packages':['gauge']});
+	<!-- continue with the rest of the code -->
+	var currentDate = new Date();  //defaults to todays date
+	var currentColumn = "Energy_kcal_kcal";  // defaults to calories display
+	$(document).ready(function() {		//when the document is ready i.e. all html loaded
+		// lets start by setting the date
+		currentDate = new Date();
+		$('#datepicker').val(dateFormat(currentDate, 'nutritionDate'));
+		//and get the calories total for this date
+		getSpecificValues(currentDate, currentColumn);
+		// and the recipes for today
+		getDaysRecipes(currentDate);
+		// and now the function attached to #datepicker id	
+		var MYDATEFORMAT = "DD, d M yy";
+		$('#datepicker').datepicker({
+			maxDate: '+0d',
+			dateFormat: MYDATEFORMAT,
+			onSelect: function(dateText, inst) {
+				currentDate = $.datepicker.parseDate(inst.settings.dateFormat || $.datepicker._defaults.dateFormat, dateText, inst.settings);
+				getSpecificValues(currentDate, currentColumn);
+				getDaysRecipes(currentDate);
+			}
+		});//end datepicker function
+		// now the hidden popups for selections
+		$('#popup_box').hide();
+		$('#divPortionName').hide();
+		$('#divNumPortions').hide();
+
+		//on click show the hider div and the message
+		$('#showpopup').click( function() {
+			showPopup();
+		});
+		//on click hide the message and the
+		$('#buttonClose').click( function() {
+			hidePopup();
+		});	
+		// now handle the sliding tabs
+		$('.tabs a').click (function() {
+			var $this = $(this);     // efficient for multiple accesses
+			$('.panel').hide();		 // hide panels
+			//remove the fuzzy lines around 'selected' item
+			$('.tabs a.active').removeClass('active'); // remove it
+			$this.addClass('active').blur();		// and add this is the effect
+			// now make the panel appear
+			var panel = $this.attr('href');
+			$(panel).fadeIn('slow');
+			return false; // this stops the browser following the tab as a 'proper' link
+		}); //end tabs click
+		// now fire the click for first entry
+//		$('#foodselection').hide();
+		$('.tabs li:first a').click();	
+		// now check for login - this is not yet done so assume NOT logged in
+		$('#loginform').show();
+		$('#loggedin').hide();
+		$('#loginform').submit(function() {
+			var formData = $(this).serialize();	//collate all the user input
+			$.post('process_login.php', formData, processData(returndata)).error("ouch!");	//and execute the submit
+			function processData(data) {			// the callback function for above
+				if (data === "pass") {
+					$('#loginform').hide();
+					$('#loggedin').show();
+//					$('#content').html("<p>You have successfully logged on!<p>");
+				} else {
+					$('#welcomeframe').prepend("<p id='fail'>Incorrect login information. Please try again<p>");
+				};
+			}; // end processData
+		}); // end login submit function
+		// Set a callback to run when the Google Visualization API is loaded.
+		//google.setOnLoadCallback(drawChart());
+		//set up the autocomplete for selecting recipes
+		
+		$("#recipeName").autocomplete({
+			source: "getautocompletelist.php",
+			minLength: 2,
+			select: function(event, ui) {
+					alert ("Selected " + ui.item.id + " Label - " + ui.item.label + " Value - " + ui.item.value);
+			},
+			html: true
+		// optional (if other layers overlap autocomplete list)
+//			open: function(event, ui) {
+//					$(".ui-autocomplete").css("z-index", 1000);
+//			}
+    });
+		
+		$('#divPortionName').hide();
+		$('#divNumPortions').hide();
+	}); // end ready
+
+</script>
+  </head>
+	<body>
+
+
+ <br><br>This is the test screen
+
+
+
+		<div id="newentries" class="panel">
+			<fieldset>
+				<legend>
+					<h1>Convenient Combinations</h1>
+				</legend>
+				<div class="innerbox">
+
+					<div class="mealentry" style="visibility:hidden">
+						<label id="foodnamelabel2">Food Name</label>
+						<label id="amountlabel2" for="mealamount"><br>New Amount:&nbsp;</label>					
+						<input type="text" name="mealamount2" id="mealamount2"/>								
+					</div>					
+						<form action="" id="food">
+							<div id="recfoodselection">
+								Recipe:<input type="text" name="recipeName" id="recipeName" />
+								<div id="divPortionName">Portion:<input type="text" id="portionName" /></div>
+								<div id="divNumPortions">Num Servings:<input type="text" id="numPortions"></div>
+								<a onclick="getRecipeIngredients($('#recdetail').val());" class="plussign"></a>					
+								<div display="none" id="recdetail"></div>
+								<div id="recipebox"></div>
+								<div class="selection-list">			
+									<div id="matches"></div>
+								</div>	
+							</div>
+						</form>	
+					<div id="recpopup_box">							
+					</div>
+				</div>
+				 <!-- end popup -->
+			</fieldset>					
+		</div>
+				
+				
+				
+	</body>

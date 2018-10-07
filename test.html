@@ -1,0 +1,34 @@
+<!doctype html>
+        <div id="period" class="panel">
+          <form id="display" name="display" method="post" action="">
+            <fieldset>
+                <legend>This Days Food &amp; Drink</legend>
+                <div class="innerbox">
+                    <div id="diarybox">diary replace this</div>
+                    <div id="popup_box">							
+<!--                        <form action="" id="food">`-->
+                            <div id="foodselection">
+                                <label for="txt1">Food name:</label>
+                                <input type="text" onkeyup="showHint(this.value)" name="food" id="txt1" />
+                                <label for="amount">Amnt:</label>										
+                                <input type="text" id="amount" />
+                                <input id="addButton" type="button" value="Add" onClick="addIngredient();" />
+                                <input id="buttonClose" type="button" value="Cancel" />
+                                <!--<a onclick="addIngredient()" class="plussign"></a>-->
+                                <div id="detail"></div>			
+                                <div id="txtHint"></div>
+                            </div>
+                            <!-- <a id="buttonClose">Close</a> -->
+<!--                        </form>	-->						
+                    </div>
+                    <div id="mealentry" style="display:none">
+                        <label id="foodnamelabel">Food Name</label>
+                        <label id="amountlabel" for="mealamount"><br>New Amount:&nbsp;</label>					
+                        <input type="text" name="mealamount" id="mealamount"/>								
+                    </div>
+                </div>
+                <!-- end popup -->
+            </fieldset>
+          </form>
+        </div>
+        <!-- end panel period -->

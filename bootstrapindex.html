@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+<!-- HELLO RON -->
+<head>
+
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./_css/site.css" />
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
+
+<title>Diet Diary</title>
+
+</head>
+
+<body>
+<nav class="navbar navbar-inverse">
+<div class="container-fluid">
+<div class="navbar-header">
+	<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+		<span class="icon-bar"></span>
+		<span class="icon-bar"></span>
+		<span class="icon-bar"></span>
+	</button> 
+	<a class="navbar-brand" href="#">Diet Diary</a>
+</div>
+
+<div class="collapse navbar-collapse" id="myNavbar">
+	<ul class="nav navbar-nav">
+		<li class="active"><a href="#">Home</a></li>
+		<li><a href="#content1">Dashboard</a></li>
+		<li><a href="#content2">Days Details</a></li>
+		<li><a href="#content3">Menu Items</a></li>
+		<li><a href="#content4">Ingredients</a></li>
+	</ul>
+	<ul class="nav navbar-nav navbar-right">
+		<li><a href="signup.html"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
+		<li><a href="#" data-toggle="modal" data-target="#loginModal"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+	</ul>
+</div>
+</div>
+</nav>
+
+<div class="container">
+
+<h1>Diet Diary</h1>
+
+<div class="dateheader">
+<table class="table table-bordered">
+<tr>
+<td>
+	<div id="prevbuttdiv" class="col-lg-1"><button class="button btn-primary" type="button" onclick="decrementDate();" id="prevbutt" name="previous"><span class="glyphicon glyphicon-backward"></span></button></div>
+</td>
+<td align="center">
+	<div id="datepickerdiv" class="col-lg-10"><input type="text" id="datepicker" name="date" /></div>
+</td>
+<td align="right">
+	<div id="nextbuttdiv" class="col-lg-1"><button class="button btn-primary" type="button" onclick="incrementDate();" id="nextbutt" name="next"><span class="glyphicon glyphicon-forward"></span></button></div>
+</td>
+</tr>
+</table>
+</div>
+
+<div class="panel-group" id="accordion">
+<div class="panel panel-default">
+<div class="panel-heading" data-target="#content1">
+	<h2 class="panel-title">
+		Dashboard
+	</h2>
+</div>
+	<div id="content1" class="collapse in">
+		<div class="panel-body">
+			<div id='displaygraph'>
+				<div>
+				<table class="table table-bordered">
+				<tr>
+					<td class="graphtable"><div class="col-md-2 col-sm-2" id="box1">Box 1</div></td>
+					<td class="col-lg-2 col-sm-2"><div class="col-lg-2 col-sm-2" id="box2">Box 2</div></td>
+				</tr>
+				<tr>
+					<td ><div class="col-lg-4 col-sm-4" id="box3">Box 3</div></td>
+				</tr>
+				</table>
+				<div id="columnselections"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading"  data-target="#content2">
+	<h2 class="panel-title">
+		Days Details
+	</h2>
+</div>
+<div id="content2" class="collapse">
+	<div class="panel-body" id="period">
+	  <form id="display" name="display" method="post" action="">
+		<fieldset>
+			<legend>This Days Food &amp; Drink</legend>
+			<div class="innerbox">
+				<div id="diarybox">diary table replaces this</div>					
+				<div id="mealentry" style="display:none">
+					<label id="foodnamelabel">Food Name</label>								
+				</div>
+			</div>
+		</fieldset>
+	  </form>
+	</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading"  data-target="#content3">
+	<h2 class="panel-title">
+		Menu Items
+	</h2>
+</div>
+<div id="content3" class="collapse">
+	<div class="panel-body" id="newentries">
+		<fieldset>
+		<legend>Convenient Combinations</legend>
+		<div class="innerbox">					
+		<form action="" id="food">
+			<div id="recfoodselection">
+			<table class="table table-bordered">
+			<tbody>
+				<tr>
+					<td style="width:25%; font-weight:bold; font-size: 110%">Recipe:</td>
+					<td><input type="text" name="recipeName" id="recipeName" maxlength="50" size="255" /></td>
+					<td style="width:10%"><a id="recipeid" onclick="addRecipe()" class="plussign" title="Add ..." ></a></td>
+				</tr>
+			</tbody>
+			</table>
+			<table class="table table-bordered">
+			<tbody>
+				<tr id="divNumPortions">
+					<td style="width:25%">Servings:</td>
+					<td style="width:25%"><input type="text" id="numPortions" maxlength="4" size="4" /></td>
+					<td style="width:25%">Serving Name:</td>
+					<td style="width:25%"><input type="text" id="portionName" maxlength="15" size="32" /></td>
+				</tr>
+			</tbody>
+			</table>				
+			<div id="recdetail"></div><!-- these blank divs will hold content DO NOT DELETE! -->
+			<div id="recipeid2"></div><!-- these blank divs will hold content DO NOT DELETE! -->
+			<div id="recipebox"></div><!-- these blank divs will hold content DO NOT DELETE! -->
+			<div id="resetbutton" align ="center"><input type="button" value="Reset" onClick="removeRecipeDetails()" /></div>			
+			<div id="matches"></div>
+			</div>
+		</form>
+		<div id="recipeentry" style="display:none">
+			<label id="recipenameLabel">Food Name</label>								
+		</div>	
+			<div id="recpopup_box"></div>
+		</div>
+		 <!-- end popup -->
+        </fieldset>	
+	</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading"  data-target="#content4">
+	<h2 class="panel-title">
+		Ingredients
+	</h2>
+</div>
+<div id="content4" class="collapse">
+	<div class="panel-body" id="newingredients">
+	<fieldset>
+	<legend>New Ingredients</legend>
+	<div id="ingredientform" class="innerbox">
+	<form>
+	<table class="table table-dark" id="ingredienttable" style="width:100%">
+		<tbody>
+		<tr>
+			<td style="width:35%; font-weight:bold; font-size: 110%">Ingredient Name: </td>
+			<td ><input type="text" id="food_name" size="45" maxlength="255"/></td>
+		</tr>
+		<tr>
+			<td style="width:35%; font-size: 110%">Barcode: </td>
+			<td ><input type="text" id="barcode" size="45" maxlength="255"/></td>
+		</tr>
+		<tr><td>Per 100g values:</td><td>(from the panel on the pack)</td></tr>
+		<tr><td>Energy in kcal: </td><td><input type="text" id="energy"/></td></tr>
+		<tr><td>Fat: </td><td><input type="text" id="fat"/></td></tr>
+		<tr><td>of which sats: </td><td><input type="text" id="satfats"/></td></tr>
+		<tr><td>Carbohydrates: </td><td><input type="text" id="carbs"/></td></tr>
+		<tr><td>of which sugars: </td><td><input type="text" id="sugars"/></td></tr>
+		<tr><td>Fibre: </td><td><input type="text" id="fibre"/></td></tr>
+		<tr><td>Protein: </td><td><input type="text" id="protein"/></td></tr>
+		<tr><td>Salt: </td><td><input type="text" id="sodium" onblur="showSalt()" /><div id="salt" style="float:right"> (Sodium: )&nbsp;&nbsp;</div></td></tr>
+		<tr><td>Cholesterol (mg): </td><td><input type="text" id="Cholesterol"/></td></tr>
+		<tr><td>Alcohol ml: </td><td><input type="text" id="alcohol" onblur="showAUnits()"/><div id="aunits" style="float:right"> (Units)&nbsp;&nbsp;</div></td></tr>
+		<tr><td>Portion Values:</td><td>(please put portion values below)</td></tr>
+		<tr><td>Portion Size(g): </td><td><input type="text" id="newportionsize"/></td></tr>
+		<tr><td>Portion Name: </td><td><input type="text" id="newportionname"/></td></tr>
+		<tr>
+			<td align="center" id="ingredientid"><input type="button" onclick="addNewIngredient()" name="ingredientButton" id="ingredientButton" value="Add Ingredient" /></td>
+			<td align="center"><input type="button" onclick="removeIngredientDetails()" name="resetIngredientButton" id="resetIngredientButton" value="Clear Entry" /></td>
+		</tr>
+		</tbody>
+	</table>
+	</form>
+	</div>
+</fieldset>
+	</div>
+</div>
+</div>
+</div>
+</div>
+
+<form method="post" action="process_login.php" id="loginform">
+<div class="modal fade" id="loginModal" tabindex="-1">
+<div class="modal-dialog">
+<div class="modal-content">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal">&times;</button>
+		<h4 class="modal-title" id="loginModalLabel">Login</h4>
+	</div>
+	<div class="modal-body">
+		<div class="form-group" id="inputUserIDFormGroup">				
+			<label class="control-label" for="username">User ID</label>				
+			<input type="text" class="form-control" id="username" placeholder="Enter your user ID">    			
+		</div>
+		<div class="form-group" id="inputPasswordFormGroup">				
+			<label class="control-label" for="password">Password</label>				
+			<input type="password" class="form-control" id="password" placeholder="Enter your password">    			
+		</div>
+	</div>
+	<div class="modal-footer">
+		<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+		<button type="submit" class="btn btn-primary" onclick="formhash(this.form, this.form.password);">Login</button>
+	</div>
+</div>
+</div>
+</div>
+</form>
+<!--form action="#" id="loginForm">
+<div class="modal fade" id="loginModal" tabindex="-1">
+<div class="modal-dialog">
+<div class="modal-content">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal">&times;</button>
+		<h4 class="modal-title" id="loginModalLabel">Login</h4>
+	</div>
+	<div class="modal-body">
+		<div class="form-group" id="inputUserIDFormGroup">				
+			<label class="control-label" for="inputUserID">User ID</label>				
+			<input type="text" class="form-control" id="inputUserID" placeholder="Enter your user ID">    			
+		</div>
+		<div class="form-group" id="inputPasswordFormGroup">				
+			<label class="control-label" for="inputPassword">Password</label>				
+			<input type="password" class="form-control" id="inputPassword" placeholder="Enter your password">    			
+		</div>
+	</div>
+	<div class="modal-footer">
+		<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+		<button type="submit" class="btn btn-primary">Login</button>
+	</div>
+</div>
+</div>
+</div>
+</form-->
+
+<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+<!--Load the AJAX API-->
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>	
+<!-- now some local functions -->		
+<script src="dietdiaryfunctions.js" type="text/javascript"></script>
+<script src="sha512.js"></script>
+<script src="forms.js"></script>
+<script src="./_js/jquery.ui.autocomplete.html.js"></script>
+<!--    <script type="text/javascript" src="../DietDiary/_js/jquery.autocomplete.min.js"></script> -->
+<script src="./_js/jquery.jeditable.mini.js"></script>
+
+<script>
+// Load the Visualization API and the gauge package.
+google.load('visualization', '1.0', {'packages':['gauge','corechart']});
+//<!-- continue with the rest of the code -->
+var currentDate = new Date();  //defaults to todays date
+var currentColumn = "Energy_kcal_kcal";  // defaults to calories display
+
+$(document).ready(function() {
+	$('.panel-heading').click(function(){
+		var target = $(this).data("target");
+		$('#accordion').on('show.bs.collapse', function () {
+			$('#accordion .in').collapse('hide');
+		});
+		$(target).collapse('toggle');
+	});
+	// lets start by setting the date
+	currentDate = new Date();
+	//and get the calories total for this date
+	getSpecificValues(currentDate, currentColumn);
+	// and the recipes for today
+	getDaysRecipes(currentDate);
+	currentColumn = "Energy_kcal_kcal";
+	// and set up the datepicker for the header
+	$('#datepicker').val(dateFormat(currentDate, 'nutritionDate'));	
+	/*
+	// and now the function attached to #datepicker id - initialises the other panels
+	*/
+	var MYDATEFORMAT = "DD, d M yy";
+	$('#datepicker').datepicker({
+		maxDate: '+0d',
+		dateFormat: MYDATEFORMAT,
+		onSelect: function(dateText, inst) {
+				currentDate = $.datepicker.parseDate(inst.settings.dateFormat || $.datepicker._defaults.dateFormat, dateText, inst.settings);
+				getSpecificValues(currentDate, currentColumn);
+				getDaysRecipes(currentDate);
+		}
+	});//end datepicker function
+	// set up the selection list in the chart display panel
+	showColumnSelections();
+	/***********************************************
+	// this next section sets up the 'Meals +' tab	
+	// this is where new recipes can be entered, but also
+	// where existing recipes can be displayed
+	*/
+	$('#resetbutton').hide();               // there is nothing to reset yet
+	//set up the autocomplete for selecting recipes
+
+	$("#recipeName").autocomplete({         // attached to the recipename input field
+		source: "./getlist.php",            // get the list of all recipes
+		minLength: 2,
+		html : true,
+		autoFocus: true,
+		selectFirst : true,
+		select: function(event, ui) {
+			displayRecipeIngredients(ui.item.id);   //display the selected one
+			}
+		}
+	);
+	// and the keypress
+	$('#recipeName').keypress(function(e) {         // if they press return from the recipe field
+		if(e.which === 13 || e.which === 9) {       
+			$('#recfoodselection a').click();       // pretend they have clicked the 'add' button
+		}
+	});
+	$('#portionName').keypress(function(e) {
+		if(e.which === 13) {
+			$('#recipeid').click();
+		}
+	});
+	$('#numPortions').keypress(function(e) {
+		if(e.which === 13) {
+			$('#portionName').focus();
+		}
+	});
+	/******************************************************
+	// now set up the new ingredients panel
+	// this is where the user can add new ingredients into the database
+	*/
+	$('#newamountcell').keypress(function(e) {
+		if(e.which === 13) {
+			$('#currentingredientrow td:eq(3)').click();
+		}
+	});
+	// now the autocomplete bit
+	$('#food_name').autocomplete({
+		source: "getIngredientList.php",  // gets the ingredient list for dropdown
+		minLength: 3,
+		html : true,
+		autoFocus: true,
+		selectFirst : true,                       // minimum of 3 characters required
+		select: function(event, ui) {
+			$('#ingredientButton').attr('value',"Update Ingredient");   // change the button to update since this INGREDIENT exists
+			$('#ingredientButton').attr('onclick','updateIngredient()');// and the associated function
+			$('#ingredientid').val(ui.item.id);                         // and save the value of the ingredientid for later
+			$.post('getIngredient.php',                     // now get the ingredient selected
+				{ ingredientfoodcode : ui.item.id },
+				function (data){
+					$('#energy').val(data[0]['energy']);        // and fill in all the valuesd
+					$('#protein').val(data[0]['protein']);
+					$('#carbs').val(data[0]['carbs']);
+					$('#sugars').val(data[0]['sugars']);
+					$('#fat').val(data[0]['fat']);
+					$('#satfats').val(data[0]['satfats']);
+					$('#fibre').val(data[0]['fibre']);
+					$('#sodium').val(data[0]['sodium'] / 400);
+					$('#Cholesterol').val(data[0]['Cholesterol']);
+					$('#alcohol').val(data[0]['alcohol']);                    
+				},
+				'json'
+			);
+			}
+		}
+	); 
+});
+</script>
+
+</body>
+</html>
