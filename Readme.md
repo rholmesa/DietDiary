@@ -1,4 +1,2 @@
-This is the first readme file I have created
-
-Now created a remote
-
+# DietDiary
+this is to keep a safe copy
